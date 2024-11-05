@@ -1,0 +1,40 @@
+function processUColumnWithScroll() {
+  var spreadsheet = SpreadsheetApp.openById('YOUR_SPREADSHEET_ID');
+  var sheet = spreadsheet.getActiveSheet();
+  var lastRow = getLastFilledRow(sheet, 'A:G'); // Get the last filled row in columns A to G
+
+  Logger.log('Auto-filling U column from 2 to ' + lastRow);
+
+  // Fill down the U column if Mail Mittente (column B) is not empty
+  for (var row = 2; row <= lastRow; row++) {
+    var email = sheet.getRange(row, 2).getValue(); // Get the value in column B (Mail Mittente)
+    if (email && email !== "" && email !== "NULL") {
+      // Find the last filled row in the U column
+      var lastFilledU = getLastFilledRow(sheet, 'U:U');
+
+      // Define the range to fill down
+      var sourceRange = sheet.getRange(lastFilledU, 21); // Last filled cell in U column
+      var destinationRange = sheet.getRange(lastFilledU, 21, lastRow - lastFilledU + 1); // Extend from the last filled cell to the new last row
+
+      // Perform the auto-fill
+      sourceRange.autoFill(destinationRange, SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+    } else {
+      Logger.log('Skipping row ' + row + ' because Mail Mittente is empty or NULL.');
+    }
+  }
+
+  Logger.log('Auto-fill completed for U column.');
+}
+
+function getLastFilledRow(sheet, range) {
+  // Find the last row that has any content in the specified range (e.g., 'A:G' or 'U:U')
+  var dataRange = sheet.getRange(range);
+  var values = dataRange.getValues();
+  for (var i = values.length - 1; i >= 0; i--) {
+    var row = values[i];
+    if (row.some(function(cell) { return cell !== "" && cell !== null; })) {
+      return i + 1; // +1 because array index starts from 0
+    }
+  }
+  return 1; // Default to row 1 if no data found
+}
