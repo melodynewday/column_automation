@@ -1,0 +1,106 @@
+function processLast10Rows() {
+  // Open the spreadsheet using the provided spreadsheet ID
+  var spreadsheet = SpreadsheetApp.openById('YOUR_SPREADSHEET_ID');
+  
+  // Get the active sheet in the spreadsheet
+  var sheet = spreadsheet.getActiveSheet();
+  
+  // Get the last row in the sheet
+  var lastRow = sheet.getLastRow();
+  
+  // Determine the starting row (last 10 rows)
+  var startRow = Math.max(1, lastRow - 9); // Ensures we don't go below row 1
+  
+  // Loop through the last 10 rows
+  for (var row = startRow; row <= lastRow; row++) {
+    // Get the value in column U (21st column) of the current row
+    var wholeInfo = sheet.getRange(row, 21).getValue(); // Column U (21)
+    
+    // Only proceed if column U of the current row is not empty
+    if (wholeInfo && typeof wholeInfo === 'string') {
+      try {
+        // Extract name, surname, phone number, city, country, job title, and company using the appropriate delimiters
+        var name = getName(wholeInfo) || 'NULL';
+        var surname = getSurname(wholeInfo) || 'NULL';
+        var phoneNumber = getPhoneNumber(wholeInfo) || 'NULL';
+        var city = getCity(wholeInfo) || 'NULL';
+        var country = getCountry(wholeInfo) || 'NULL';
+        var jobTitle = getJobTitle(wholeInfo) || 'NULL';
+        var company = getCompany(wholeInfo) || 'NULL';
+        
+        // Set the extracted values into their respective columns for the current row
+        sheet.getRange(row, 9).setValue(name);         // Column I for Name
+        sheet.getRange(row, 10).setValue(surname);     // Column J for Surname
+        sheet.getRange(row, 11).setValue(phoneNumber); // Column K for Phone Number
+        sheet.getRange(row, 12).setValue(city);        // Column L for City
+        sheet.getRange(row, 13).setValue(country);     // Column M for Country
+        sheet.getRange(row, 16).setValue(jobTitle);    // Column P for Job Title
+        sheet.getRange(row, 17).setValue(company);     // Column Q for Company
+      } catch (error) {
+        Logger.log('Error processing row ' + row + ': ' + error.message);
+      }
+    }
+  }
+}
+
+// Function to extract the name
+function getName(wholeInfo) {
+  var parts = wholeInfo.split("|");
+  if (parts.length > 1) {
+    var nameParts = parts[1].split("^");
+    return nameParts.length > 0 ? nameParts[0] : null;
+  }
+  return null;
+}
+
+// Function to extract the surname
+function getSurname(wholeInfo) {
+  var parts = wholeInfo.split("^");
+  if (parts.length > 1) {
+    var surnameParts = parts[1].split("§");
+    return surnameParts.length > 0 ? surnameParts[0] : null;
+  }
+  return null;
+}
+
+// Function to extract the phone number
+function getPhoneNumber(wholeInfo) {
+  var parts = wholeInfo.split("|");
+  return parts.length > 0 ? parts[0] : null;
+}
+
+// Function to extract the city
+function getCity(wholeInfo) {
+  var parts = wholeInfo.split("§");
+  if (parts.length > 1) {
+    var cityParts = parts[1].split("*");
+    return cityParts.length > 0 ? cityParts[0] : null;
+  }
+  return null;
+}
+
+// Function to extract the country
+function getCountry(wholeInfo) {
+  var parts = wholeInfo.split("*");
+  if (parts.length > 1) {
+    var countryParts = parts[1].split("°");
+    return countryParts.length > 0 ? countryParts[0] : null;
+  }
+  return null;
+}
+
+// Function to extract the job title
+function getJobTitle(wholeInfo) {
+  var parts = wholeInfo.split("°");
+  if (parts.length > 1) {
+    var jobTitleParts = parts[1].split(">");
+    return jobTitleParts.length > 0 ? jobTitleParts[0] : null;
+  }
+  return null;
+}
+
+// Function to extract the company
+function getCompany(wholeInfo) {
+  var parts = wholeInfo.split(">");
+  return parts.length > 1 ? parts[1] : null;
+}
